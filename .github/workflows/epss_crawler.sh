@@ -18,7 +18,7 @@ jobs:
         sudo apt-get update -y
     - name: update EPSS db
       run: |
-        ./helpers/EPSS_crawler.sh
+        ./EPSS-crawler.sh
     - name: Create Pull Request
       id: cpr
       uses: peter-evans/create-pull-request@v4
