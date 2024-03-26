@@ -17,17 +17,33 @@
 #
 
 FIRST_URL="https://api.first.org/data/v1/epss?envelope=true&pretty=true&offset="
-SAVE_PATH="./EPSS_downloaded"
+TMP_PATH="./EPSS_temp"
+SAVE_PATH="./EPSS_CVE_data"
 
 [[ ! -d "${SAVE_PATH}" ]] && mkdir "${SAVE_PATH}"
+[[ -d "${TMP_PATH}" ]] && rm -r "${TMP_PATH}"
+[[ ! -d "${TMP_PATH}" ]] && mkdir "${TMP_PATH}"
 
 CNT=0
 while(true); do
   echo "[*] Downloading EPSS offset ${CNT}"
-  curl "${FIRST_URL}""${CNT}" > "${SAVE_PATH}"/EPSS-"${CNT}".json
-  if [[ "$(jq '.data' "${SAVE_PATH}"/EPSS-"${CNT}".json | wc -l)" -eq 1 ]]; then
+  curl "${FIRST_URL}""${CNT}" > "${TMP_PATH}"/EPSS-"${CNT}".json
+  if [[ "$(jq '.data' "${TMP_PATH}"/EPSS-"${CNT}".json | wc -l)" -eq 1 ]]; then
     echo "[*] Stop downloading EPSS with offset ${CNT}"
     break
   fi
+  echo "[*] Processing EPSS data ... CNT ${CNT}"
+  for i in {0..99}; do
+    CVE_ID=$(jq -r ".data[${i}].cve" "${TMP_PATH}"/EPSS-"${CNT}".json || (echo "[-] Error in processing ${TMP_PATH}/EPSS-${CNT}.json"))
+    echo "[*] Processing EPSS data ... ${CVE_ID}"
+
+    CVE_YEAR="$(echo "${CVE_ID}" | cut -d '-' -f2)"
+    [[ ! "${CVE_YEAR}" =~ ^[0-9]+$ ]] && continue
+    [[ ! -d "${SAVE_PATH}"/"${CVE_YEAR}" ]] && mkdir "${SAVE_PATH}"/"${CVE_YEAR}"
+
+    jq -c ".data[${i}]" "${TMP_PATH}"/EPSS-"${CNT}".json > "${SAVE_PATH}"/"${CVE_YEAR}"/"${CVE_ID}"_EPSS.json || (echo "[-] Error in processing CVE entry ${CVE_ID} from ${TMP_PATH}/EPSS-${CNT}.json")
+  done
   CNT=$((CNT+100))
 done
+
+[[ -d "${TMP_PATH}" ]] && rm -r "${TMP_PATH}"

@@ -1,8 +1,6 @@
-# Welcome to EMBA support repository
+# Welcome to EMBA EPSS data repository
 
-This repo collects all the great projects, sources and repositories which are used from [*EMBA*](https://github.com/e-m-b-a).
-
-If we missed something please [contact us](https://github.com/e-m-b-a/emba/issues).
+This repo maintains the EPSS data which is used from [*EMBA*](https://github.com/e-m-b-a).
 
 <p align="center">
   <img src="https://raw.githubusercontent.com/e-m-b-a/emba/master/helpers/emba.svg" width="200"/>
