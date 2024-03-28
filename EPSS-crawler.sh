@@ -13,7 +13,7 @@
 #
 # Author(s): Michael Messner
 
-# Description:  This script automatically downloads the EPSS data from FIRST
+# Description:  This script automatically downloads the EPSS data from FIRST and generated a csv for further processing
 #
 
 FIRST_URL="https://api.first.org/data/v1/epss?envelope=true&pretty=true&offset="
@@ -27,21 +27,27 @@ SAVE_PATH="./EPSS_CVE_data"
 CNT=0
 while(true); do
   echo "[*] Downloading EPSS offset ${CNT}"
+
   curl "${FIRST_URL}""${CNT}" > "${TMP_PATH}"/EPSS-"${CNT}".json
+
   if [[ "$(jq '.data' "${TMP_PATH}"/EPSS-"${CNT}".json | wc -l)" -eq 1 ]]; then
     echo "[*] Stop downloading EPSS with offset ${CNT}"
     break
   fi
+
   echo "[*] Processing EPSS data ... CNT ${CNT}"
+
   for i in {0..99}; do
     CVE_ID=$(jq -r ".data[${i}].cve" "${TMP_PATH}"/EPSS-"${CNT}".json || (echo "[-] Error in processing ${TMP_PATH}/EPSS-${CNT}.json"))
+    EPSS=$(jq -r ".data[${i}].epss" "${TMP_PATH}"/EPSS-"${CNT}".json || (echo "[-] Error in processing ${TMP_PATH}/EPSS-${CNT}.json"))
+    PERC=$(jq -r ".data[${i}].percentile" "${TMP_PATH}"/EPSS-"${CNT}".json || (echo "[-] Error in processing ${TMP_PATH}/EPSS-${CNT}.json"))
+
     echo "[*] Processing EPSS data ... ${CVE_ID}"
 
     CVE_YEAR="$(echo "${CVE_ID}" | cut -d '-' -f2)"
     [[ ! "${CVE_YEAR}" =~ ^[0-9]+$ ]] && continue
-    [[ ! -d "${SAVE_PATH}"/"${CVE_YEAR}" ]] && mkdir "${SAVE_PATH}"/"${CVE_YEAR}"
 
-    jq -c ".data[${i}]" "${TMP_PATH}"/EPSS-"${CNT}".json > "${SAVE_PATH}"/"${CVE_YEAR}"/"${CVE_ID}"_EPSS.json || (echo "[-] Error in processing CVE entry ${CVE_ID} from ${TMP_PATH}/EPSS-${CNT}.json")
+    echo "${CVE_ID:-NA};${EPSS:-NA};${PERC:-NA}" >> "${SAVE_PATH}"/"CVE_${CVE_YEAR}_EPSS.csv" || (echo "[-] Error in processing CVE entry ${CVE_ID} from ${TMP_PATH}/EPSS-${CNT}.json")
   done
   CNT=$((CNT+100))
 done
