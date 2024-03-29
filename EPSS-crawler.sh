@@ -24,6 +24,8 @@ SAVE_PATH="./EPSS_CVE_data"
 [[ -d "${TMP_PATH}" ]] && rm -r "${TMP_PATH}"
 [[ ! -d "${TMP_PATH}" ]] && mkdir "${TMP_PATH}"
 
+rm "${SAVE_PATH}"/CVE_*_EPSS.csv || true
+
 CNT=0
 while(true); do
   echo "[*] Downloading EPSS offset ${CNT}"
